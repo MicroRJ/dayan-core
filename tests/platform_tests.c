@@ -62,6 +62,7 @@ int main(void)
 	Platform_String_Result current_directory = platform_get_current_directory(path_buffer, sizeof(path_buffer));
 	assert(current_directory.error == PLATFORM_ERROR_NONE);
 	assert(current_directory.size > 0);
+	assert(platform_set_current_directory(path_buffer));
 	Platform_String_Result absolute_path = platform_get_absolute_path(".", path_buffer, sizeof(path_buffer));
 	assert(absolute_path.error == PLATFORM_ERROR_NONE);
 	assert(absolute_path.size > 0);

@@ -190,6 +190,7 @@ B32 platform_create_directories(const char *path);
 B32 platform_remove_directory(const char *path);
 B32 platform_executable_resolves(const char *name);
 Platform_String_Result platform_get_current_directory(char *buffer, U64 capacity);
+B32 platform_set_current_directory(const char *path);
 Platform_String_Result platform_get_absolute_path(const char *path, char *buffer, U64 capacity);
 Platform_Directory_Open_Result platform_open_directory(const char *path);
 Platform_Directory_Next_Result platform_next_directory(Platform_Directory *directory, char *name, U64 capacity);

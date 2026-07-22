@@ -233,6 +233,11 @@ Platform_String_Result platform_get_current_directory(char *buffer, U64 capacity
 	return result;
 }
 
+B32 platform_set_current_directory(const char *path)
+{
+	return path && SetCurrentDirectoryA(path) != 0;
+}
+
 Platform_String_Result platform_get_absolute_path(const char *path, char *buffer, U64 capacity)
 {
 	Platform_String_Result result = {0};
