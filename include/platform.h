@@ -33,9 +33,9 @@ typedef enum Platform_Seek_Origin {
 
 typedef struct Platform_File_Info {
 	U64 size;
-	U64 creation_time;
-	U64 access_time;
-	U64 write_time;
+	I64 created_unix_ms;
+	I64 accessed_unix_ms;
+	I64 modified_unix_ms;
 	B32 is_directory;
 	B32 is_symbolic_link;
 } Platform_File_Info;

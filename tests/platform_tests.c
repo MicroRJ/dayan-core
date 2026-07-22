@@ -55,6 +55,8 @@ int main(void)
 	assert(platform_get_file_info(path, &info));
 	assert(info.size == sizeof(expected));
 	assert(!info.is_directory);
+	assert(info.created_unix_ms > 0);
+	assert(info.modified_unix_ms > 0);
 	assert(platform_remove_file(path));
 	char path_buffer[1024];
 	Platform_String_Result current_directory = platform_get_current_directory(path_buffer, sizeof(path_buffer));
