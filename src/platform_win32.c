@@ -44,6 +44,12 @@ void platform_virtual_release(void *memory)
 	if (memory) VirtualFree(memory, 0, MEM_RELEASE);
 }
 
+B32 platform_debug_break(void)
+{
+	DebugBreak();
+	return PLATFORM_TRUE;
+}
+
 U64 platform_counter(void)
 {
 	LARGE_INTEGER value;

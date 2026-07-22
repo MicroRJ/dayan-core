@@ -173,6 +173,7 @@ void *platform_virtual_reserve(U64 size);
 B32 platform_virtual_commit(void *memory, U64 size);
 B32 platform_virtual_decommit(void *memory, U64 size);
 void platform_virtual_release(void *memory);
+B32 platform_debug_break(void);
 
 U64 platform_counter(void);
 U64 platform_counter_frequency(void);
