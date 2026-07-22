@@ -791,6 +791,16 @@ void platform_close_process(Platform_Process *process)
 	*process = (Platform_Process){0};
 }
 
+U64 platform_current_process_id(void)
+{
+	return GetCurrentProcessId();
+}
+
+void platform_exit_process(I32 exit_code)
+{
+	ExitProcess((UINT)exit_code);
+}
+
 typedef struct Win32_Thread_Start {
 	Platform_Thread_Function *function;
 	void *context;

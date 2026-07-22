@@ -214,6 +214,8 @@ Platform_Process_Read_Result platform_read_process_output(Platform_Process *proc
 Platform_Process_Read_Result platform_read_process_error(Platform_Process *process, void *data, U64 capacity);
 Platform_Process_Wait_Result platform_wait_process(Platform_Process process, U32 milliseconds);
 void platform_close_process(Platform_Process *process);
+U64 platform_current_process_id(void);
+void platform_exit_process(I32 exit_code);
 
 Platform_Thread_Start_Result platform_start_thread(Platform_Thread_Function *function, void *context);
 B32 platform_thread_is_valid(Platform_Thread thread);
