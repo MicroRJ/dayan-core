@@ -189,6 +189,7 @@ B32 platform_move_file(const char *source, const char *destination, B32 overwrit
 B32 platform_create_directory(const char *path);
 B32 platform_create_directories(const char *path);
 B32 platform_remove_directory(const char *path);
+B32 platform_remove_tree(const char *path);
 B32 platform_executable_resolves(const char *name);
 Platform_String_Result platform_get_current_directory(char *buffer, U64 capacity);
 B32 platform_set_current_directory(const char *path);

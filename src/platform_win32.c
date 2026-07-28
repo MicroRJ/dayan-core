@@ -205,6 +205,68 @@ B32 platform_remove_directory(const char *path)
 	return error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND;
 }
 
+static B32 win32_remove_tree(const char *path)
+{
+	DWORD attributes = GetFileAttributesA(path);
+	if (attributes == INVALID_FILE_ATTRIBUTES) {
+		DWORD error = GetLastError();
+		return error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND;
+	}
+	if (!(attributes & FILE_ATTRIBUTE_DIRECTORY)) return PLATFORM_FALSE;
+	if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) return platform_remove_directory(path);
+
+	SIZE_T path_size = strlen(path);
+	SIZE_T search_size = path_size + 3;
+	char *search = HeapAlloc(GetProcessHeap(), 0, search_size);
+	if (!search) return PLATFORM_FALSE;
+	memcpy(search, path, path_size);
+	SIZE_T cursor = path_size;
+	if (cursor && search[cursor - 1] != '/' && search[cursor - 1] != '\\') search[cursor++] = '\\';
+	search[cursor++] = '*';
+	search[cursor] = 0;
+
+	WIN32_FIND_DATAA data;
+	HANDLE find = FindFirstFileA(search, &data);
+	HeapFree(GetProcessHeap(), 0, search);
+	if (find == INVALID_HANDLE_VALUE) return PLATFORM_FALSE;
+
+	B32 result = PLATFORM_TRUE;
+	for (;;)
+	{
+		const char *name = data.cFileName;
+		if (strcmp(name, ".") != 0 && strcmp(name, "..") != 0) {
+			SIZE_T name_size = strlen(name);
+			B32 separator = path_size && path[path_size - 1] != '/' && path[path_size - 1] != '\\';
+			SIZE_T child_size = path_size + separator + name_size;
+			char *child = HeapAlloc(GetProcessHeap(), 0, child_size + 1);
+			if (!child) {
+				result = PLATFORM_FALSE;
+				break;
+			}
+			memcpy(child, path, path_size);
+			if (separator) child[path_size] = '\\';
+			memcpy(child + path_size + separator, name, name_size + 1);
+
+			if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) result = win32_remove_tree(child);
+			else result = platform_remove_file(child);
+			HeapFree(GetProcessHeap(), 0, child);
+			if (!result) break;
+		}
+		if (!FindNextFileA(find, &data)) {
+			DWORD error = GetLastError();
+			if (error != ERROR_NO_MORE_FILES) result = PLATFORM_FALSE;
+			break;
+		}
+	}
+	FindClose(find);
+	return result && platform_remove_directory(path);
+}
+
+B32 platform_remove_tree(const char *path)
+{
+	return path && win32_remove_tree(path);
+}
+
 B32 platform_executable_resolves(const char *name)
 {
 	if (!name) return PLATFORM_FALSE;
