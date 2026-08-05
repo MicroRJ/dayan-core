@@ -177,6 +177,7 @@ B32 platform_debug_break(void);
 
 U64 platform_counter(void);
 U64 platform_counter_frequency(void);
+I64 platform_unix_time_ms(void);
 void platform_sleep(U64 milliseconds);
 
 Platform_File platform_access_file(const char *path, Platform_File_Intent intent, Platform_File_Access access);

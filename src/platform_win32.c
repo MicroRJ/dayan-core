@@ -62,6 +62,13 @@ U64 platform_counter_frequency(void)
 	return QueryPerformanceFrequency(&value) ? (U64)value.QuadPart : 0;
 }
 
+I64 platform_unix_time_ms(void)
+{
+	FILETIME time;
+	GetSystemTimeAsFileTime(&time);
+	return win32_file_time_to_unix_ms(time);
+}
+
 void platform_sleep(U64 milliseconds)
 {
 	while (milliseconds > MAXDWORD) {
