@@ -57,6 +57,7 @@ int main(void)
 	assert(!info.is_directory);
 	assert(info.created_unix_ms > 0);
 	assert(info.modified_unix_ms > 0);
+	assert(!platform_remove_tree(path));
 	assert(platform_remove_file(path));
 	char path_buffer[1024];
 	Platform_String_Result current_directory = platform_get_current_directory(path_buffer, sizeof(path_buffer));
@@ -82,10 +83,10 @@ int main(void)
 	}
 	assert(found_moved);
 	platform_close_directory(&directory_open.directory);
-	assert(platform_remove_file("build/platform_test/a/moved.tmp"));
-	assert(platform_remove_directory("build/platform_test/a/b"));
-	assert(platform_remove_directory("build/platform_test/a"));
-	assert(platform_remove_directory("build/platform_test"));
+	assert(!platform_remove_directory("build/platform_test"));
+	assert(platform_remove_tree("build/platform_test"));
+	assert(!platform_get_file_info("build/platform_test", &info));
+	assert(platform_remove_tree("build/platform_test"));
 	Platform_Result set_environment = platform_set_environment("PLATFORM_TEST_VALUE", "platapuss");
 	assert(set_environment.error == PLATFORM_ERROR_NONE);
 	Platform_Environment_Result environment_query = platform_get_environment("PLATFORM_TEST_VALUE", NULL, 0);
