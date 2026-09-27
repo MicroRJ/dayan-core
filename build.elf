@@ -64,15 +64,15 @@ options := {
 entries := {}
 
 entries.lib = fun() {
-	ret bob.build({ targets = { platform_library }, options = options })
+	ret manny.build({ targets = { platform_library }, options = options })
 }
 
 entries.build = fun() {
-	ret bob.build({ targets = { platform_library }, options = options })
+	ret manny.build({ targets = { platform_library }, options = options })
 }
 
 entries.test = fun() {
-	ret bob.build({ targets = { run_tests }, options = options })
+	ret manny.build({ targets = { run_tests }, options = options })
 }
 
 ret entries
