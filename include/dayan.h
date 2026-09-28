@@ -15,6 +15,7 @@ typedef int64_t  day_i64;
 typedef float    day_f32;
 typedef double   day_f64;
 typedef day_i32  day_b32;
+typedef uintptr_t day_uptr;
 
 #define DAY_ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))
 #define DAY_KILOBYTES(value) ((day_u64)(value) << 10)
@@ -55,6 +56,113 @@ typedef struct day_String_Array
 	day_u32 count;
 }
 day_String_Array;
+
+typedef enum day_Error
+{
+	DAY_ERROR_NONE,
+	DAY_ERROR_UNKNOWN,
+	DAY_ERROR_INVALID_ARGUMENT,
+	DAY_ERROR_NOT_FOUND,
+	DAY_ERROR_ACCESS_DENIED,
+	DAY_ERROR_ALREADY_EXISTS,
+	DAY_ERROR_OUT_OF_MEMORY,
+	DAY_ERROR_NOT_SUPPORTED,
+}
+day_Error;
+
+typedef struct day_Result
+{
+	day_Error error;
+	day_u32 os_error;
+}
+day_Result;
+
+typedef struct day_File
+{
+	day_uptr value;
+}
+day_File;
+
+typedef enum day_File_Access
+{
+	DAY_FILE_READ         = 1 << 0,
+	DAY_FILE_WRITE        = 1 << 1,
+	DAY_FILE_EXECUTE      = 1 << 2,
+	DAY_FILE_SHARE_READ   = 1 << 3,
+	DAY_FILE_SHARE_WRITE  = 1 << 4,
+	DAY_FILE_SHARE_DELETE = 1 << 5,
+	DAY_FILE_NO_BUFFERING = 1 << 6,
+}
+day_File_Access;
+
+typedef enum day_File_Intent
+{
+	DAY_FILE_CREATE_ALWAYS,
+	DAY_FILE_CREATE_NEW,
+	DAY_FILE_OPEN_ALWAYS,
+	DAY_FILE_OPEN_EXISTING,
+	DAY_FILE_TRUNCATE_EXISTING,
+}
+day_File_Intent;
+
+typedef enum day_Seek_Origin
+{
+	DAY_SEEK_BEGIN,
+	DAY_SEEK_CURRENT,
+	DAY_SEEK_END,
+}
+day_Seek_Origin;
+
+typedef struct day_File_Info
+{
+	day_u64 size;
+	day_i64 created_unix_ms;
+	day_i64 accessed_unix_ms;
+	day_i64 modified_unix_ms;
+	day_b32 is_directory;
+	day_b32 is_symbolic_link;
+}
+day_File_Info;
+
+typedef struct day_File_Result
+{
+	day_File file;
+	day_Error error;
+	day_u32 os_error;
+}
+day_File_Result;
+
+typedef struct day_File_Info_Result
+{
+	day_File_Info info;
+	day_Error error;
+	day_u32 os_error;
+}
+day_File_Info_Result;
+
+typedef struct day_File_Size_Result
+{
+	day_u64 size;
+	day_Error error;
+	day_u32 os_error;
+}
+day_File_Size_Result;
+
+typedef struct day_File_Seek_Result
+{
+	day_u64 position;
+	day_Error error;
+	day_u32 os_error;
+}
+day_File_Seek_Result;
+
+typedef struct day_IO_Result
+{
+	day_u64 size;
+	day_Error error;
+	day_u32 os_error;
+}
+day_IO_Result;
 
 #define DAY_LIT(text) ((day_String){ .data = (char *)(text), .size = sizeof(text) - 1 })
 
@@ -98,5 +206,14 @@ day_String_Array day_string_split(day_Arena *arena, day_String string, char sepa
 day_String_Array day_string_split_lines(day_Arena *arena, day_String string);
 day_String_Array day_string_split_block(day_Arena *arena, day_String string);
 day_u32 day_string_count_lines(day_String string);
+
+day_File_Result day_access_file(day_String path, day_File_Intent intent, day_File_Access access);
+day_b32 day_file_is_valid(day_File file);
+day_Result day_close_file(day_File file);
+day_File_Info_Result day_get_file_info(day_String path);
+day_File_Size_Result day_get_file_size(day_File file);
+day_File_Seek_Result day_set_file_cursor(day_File file, day_Seek_Origin origin, day_i64 distance);
+day_IO_Result day_read_file(day_File file, void *data, day_u64 size);
+day_IO_Result day_write_file(day_File file, const void *data, day_u64 size);
 
 #endif
