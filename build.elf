@@ -49,6 +49,7 @@ compile_dayan_file := {
 	inputs = {
 		"src/dayan_file.c",
 		"src/win32/dayan_file.c",
+		"src/win32/dayan_win32.h",
 		"include/dayan.h",
 	},
 	outputs = { "build/obj/dayan_file.obj" },
@@ -62,6 +63,7 @@ compile_dayan_path := {
 	inputs = {
 		"src/dayan_path.c",
 		"src/win32/dayan_path.c",
+		"src/win32/dayan_win32.h",
 		"include/dayan.h",
 	},
 	outputs = { "build/obj/dayan_path.obj" },
@@ -75,6 +77,7 @@ compile_dayan_env := {
 	inputs = {
 		"src/dayan_env.c",
 		"src/win32/dayan_env.c",
+		"src/win32/dayan_win32.h",
 		"include/dayan.h",
 	},
 	outputs = { "build/obj/dayan_env.obj" },
@@ -88,6 +91,7 @@ compile_dayan_process := {
 	inputs = {
 		"src/dayan_process.c",
 		"src/win32/dayan_process.c",
+		"src/win32/dayan_win32.h",
 		"include/dayan.h",
 	},
 	outputs = { "build/obj/dayan_process.obj" },

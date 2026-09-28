@@ -2,42 +2,9 @@
 #include <Windows.h>
 
 #include <stdint.h>
+#include <string.h>
 
-static day_Error day_win32_path_error(DWORD error)
-{
-	switch (error)
-	{
-		case ERROR_SUCCESS: return DAY_ERROR_NONE;
-		case ERROR_INVALID_PARAMETER: return DAY_ERROR_INVALID_ARGUMENT;
-		case ERROR_FILE_NOT_FOUND:
-		case ERROR_PATH_NOT_FOUND: return DAY_ERROR_NOT_FOUND;
-		case ERROR_ACCESS_DENIED: return DAY_ERROR_ACCESS_DENIED;
-		case ERROR_ALREADY_EXISTS:
-		case ERROR_FILE_EXISTS: return DAY_ERROR_ALREADY_EXISTS;
-		case ERROR_NOT_ENOUGH_MEMORY:
-		case ERROR_OUTOFMEMORY: return DAY_ERROR_OUT_OF_MEMORY;
-		case ERROR_NOT_SUPPORTED:
-		case ERROR_CALL_NOT_IMPLEMENTED: return DAY_ERROR_NOT_SUPPORTED;
-		case ERROR_INSUFFICIENT_BUFFER:
-		case ERROR_MORE_DATA: return DAY_ERROR_BUFFER_TOO_SMALL;
-		default: return DAY_ERROR_UNKNOWN;
-	}
-}
-
-static char *day_win32_path_text(day_Arena *arena, day_String path)
-{
-	char *result;
-	if ((!path.data && path.size) || path.size == UINT64_MAX) return NULL;
-	result = day_arena_reserve(arena, path.size + 1);
-	if (!result) return NULL;
-	for (day_u64 index = 0; index < path.size; ++index)
-	{
-		result[index] = path.data[index] == '/' ? '\\' : path.data[index];
-	}
-	result[path.size] = 0;
-	arena->used += path.size + 1;
-	return result;
-}
+#include "dayan_win32.h"
 
 static void day_win32_canonicalize_path(char *path, day_u64 size)
 {
@@ -72,7 +39,7 @@ day_Result day_get_executable_path(day_Arena *arena, day_String *path)
 	if (!length || length >= capacity)
 	{
 		result.os_error = GetLastError();
-		result.error = result.os_error ? day_win32_path_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
+		result.error = result.os_error ? day_win32_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
 		day_arena_restore(arena, mark);
 		return result;
 	}
@@ -100,7 +67,7 @@ day_Result day_get_current_directory(day_Arena *arena, day_String *path)
 	if (!required)
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_path_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		return result;
 	}
 	mark = day_arena_mark(arena);
@@ -114,7 +81,7 @@ day_Result day_get_current_directory(day_Arena *arena, day_String *path)
 	if (!length || length >= required)
 	{
 		result.os_error = GetLastError();
-		result.error = result.os_error ? day_win32_path_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
+		result.error = result.os_error ? day_win32_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
 		day_arena_restore(arena, mark);
 		return result;
 	}
@@ -152,7 +119,7 @@ day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *
 	if (!required)
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_path_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		day_end_scratch(scratch);
 		return result;
 	}
@@ -168,7 +135,7 @@ day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *
 	if (!length || length >= required)
 	{
 		result.os_error = GetLastError();
-		result.error = result.os_error ? day_win32_path_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
+		result.error = result.os_error ? day_win32_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
 		day_arena_restore(arena, mark);
 		day_end_scratch(scratch);
 		return result;
@@ -230,7 +197,7 @@ day_Result day_create_directory(day_String path)
 			attributes = GetFileAttributesA(native_path);
 			if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY)) result.os_error = 0;
 		}
-		result.error = day_win32_path_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 	}
 	day_end_scratch(scratch);
 	return result;
@@ -259,7 +226,7 @@ day_Result day_remove_directory(day_String path)
 	{
 		result.os_error = GetLastError();
 		if (result.os_error == ERROR_FILE_NOT_FOUND || result.os_error == ERROR_PATH_NOT_FOUND) result.os_error = 0;
-		result.error = day_win32_path_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 	}
 	day_end_scratch(scratch);
 	return result;

@@ -4,42 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-static day_Error day_win32_process_error(DWORD error)
-{
-	switch (error)
-	{
-		case ERROR_SUCCESS: return DAY_ERROR_NONE;
-		case ERROR_INVALID_PARAMETER: return DAY_ERROR_INVALID_ARGUMENT;
-		case ERROR_FILE_NOT_FOUND:
-		case ERROR_PATH_NOT_FOUND: return DAY_ERROR_NOT_FOUND;
-		case ERROR_ACCESS_DENIED: return DAY_ERROR_ACCESS_DENIED;
-		case ERROR_ALREADY_EXISTS:
-		case ERROR_FILE_EXISTS: return DAY_ERROR_ALREADY_EXISTS;
-		case ERROR_NOT_ENOUGH_MEMORY:
-		case ERROR_OUTOFMEMORY: return DAY_ERROR_OUT_OF_MEMORY;
-		case ERROR_NOT_SUPPORTED:
-		case ERROR_CALL_NOT_IMPLEMENTED: return DAY_ERROR_NOT_SUPPORTED;
-		case ERROR_INSUFFICIENT_BUFFER:
-		case ERROR_MORE_DATA: return DAY_ERROR_BUFFER_TOO_SMALL;
-		default: return DAY_ERROR_UNKNOWN;
-	}
-}
-
-static char *day_win32_process_text(day_Arena *arena, day_String string, day_b32 convert_separators)
-{
-	char *result;
-	if ((!string.data && string.size) || string.size == UINT64_MAX) return NULL;
-	result = day_arena_reserve(arena, string.size + 1);
-	if (!result) return NULL;
-	for (day_u64 index = 0; index < string.size; ++index)
-	{
-		char character = string.data[index];
-		result[index] = convert_separators && character == '/' ? '\\' : character;
-	}
-	result[string.size] = 0;
-	arena->used += string.size + 1;
-	return result;
-}
+#include "dayan_win32.h"
 
 static void day_win32_close_process_handle(HANDLE *handle)
 {
@@ -80,10 +45,10 @@ day_Result day_start_process(day_String command, day_Process_Options options, da
 		return result;
 	}
 	scratch = day_begin_scratch();
-	mutable_command = day_win32_process_text(scratch.arena, command, 0);
+	mutable_command = day_win32_text(scratch.arena, command);
 	if (options.working_directory.size)
 	{
-		working_directory = day_win32_process_text(scratch.arena, options.working_directory, 1);
+		working_directory = day_win32_path_text(scratch.arena, options.working_directory);
 	}
 	if (!mutable_command || (options.working_directory.size && !working_directory))
 	{
@@ -116,7 +81,7 @@ day_Result day_start_process(day_String command, day_Process_Options options, da
 
 failure:
 	result.os_error = GetLastError();
-	result.error = day_win32_process_error(result.os_error);
+	result.error = day_win32_error(result.os_error);
 	day_win32_close_process_handle(&process.hThread);
 	day_win32_close_process_handle(&process.hProcess);
 	day_win32_close_process_handle(&output_read);
@@ -167,7 +132,7 @@ day_Result day_read_process(day_Process *process, day_Process_Stream stream, voi
 			result.os_error = 0;
 			return result;
 		}
-		result.error = day_win32_process_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		return result;
 	}
 	if (available == 0 || capacity == 0) return result;
@@ -176,7 +141,7 @@ day_Result day_read_process(day_Process *process, day_Process_Stream stream, voi
 	if (!ReadFile(pipe, data, request, &received, NULL))
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_process_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		return result;
 	}
 	*size = received;
@@ -200,13 +165,13 @@ day_Result day_wait_process(day_Process process, day_u32 milliseconds, day_b32 *
 	if (wait != WAIT_OBJECT_0)
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_process_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		return result;
 	}
 	if (!GetExitCodeProcess((HANDLE)process.handle, &code))
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_process_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		return result;
 	}
 	*completed = 1;
@@ -231,7 +196,7 @@ day_Result day_close_process(day_Process *process)
 		if (handles[index] && !CloseHandle(handles[index]) && result.error == DAY_ERROR_NONE)
 		{
 			result.os_error = GetLastError();
-			result.error = day_win32_process_error(result.os_error);
+			result.error = day_win32_error(result.os_error);
 		}
 	}
 	*process = (day_Process){0};

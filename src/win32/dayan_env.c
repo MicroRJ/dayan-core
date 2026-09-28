@@ -4,35 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-static day_Error day_win32_env_error(DWORD error)
-{
-	switch (error)
-	{
-		case ERROR_SUCCESS: return DAY_ERROR_NONE;
-		case ERROR_INVALID_PARAMETER: return DAY_ERROR_INVALID_ARGUMENT;
-		case ERROR_ENVVAR_NOT_FOUND: return DAY_ERROR_NOT_FOUND;
-		case ERROR_ACCESS_DENIED: return DAY_ERROR_ACCESS_DENIED;
-		case ERROR_NOT_ENOUGH_MEMORY:
-		case ERROR_OUTOFMEMORY: return DAY_ERROR_OUT_OF_MEMORY;
-		case ERROR_NOT_SUPPORTED:
-		case ERROR_CALL_NOT_IMPLEMENTED: return DAY_ERROR_NOT_SUPPORTED;
-		case ERROR_INSUFFICIENT_BUFFER:
-		case ERROR_MORE_DATA: return DAY_ERROR_BUFFER_TOO_SMALL;
-		default: return DAY_ERROR_UNKNOWN;
-	}
-}
-
-static char *day_win32_env_text(day_Arena *arena, day_String string)
-{
-	char *result;
-	if ((!string.data && string.size) || string.size == UINT64_MAX) return NULL;
-	result = day_arena_reserve(arena, string.size + 1);
-	if (!result) return NULL;
-	if (string.size) memcpy(result, string.data, (size_t)string.size);
-	result[string.size] = 0;
-	arena->used += string.size + 1;
-	return result;
-}
+#include "dayan_win32.h"
 
 static day_b32 day_win32_env_name_is_valid(day_String name)
 {
@@ -61,7 +33,7 @@ day_Result day_get_env_field(day_Arena *arena, day_String name, day_String *valu
 		return result;
 	}
 	scratch = day_begin_different_scratch(arena);
-	native_name = day_win32_env_text(scratch.arena, name);
+	native_name = day_win32_text(scratch.arena, name);
 	if (!native_name)
 	{
 		result.error = DAY_ERROR_OUT_OF_MEMORY;
@@ -75,7 +47,7 @@ day_Result day_get_env_field(day_Arena *arena, day_String name, day_String *valu
 		result.os_error = GetLastError();
 		if (result.os_error != ERROR_SUCCESS)
 		{
-			result.error = day_win32_env_error(result.os_error);
+			result.error = day_win32_error(result.os_error);
 			day_end_scratch(scratch);
 			return result;
 		}
@@ -94,7 +66,7 @@ day_Result day_get_env_field(day_Arena *arena, day_String name, day_String *valu
 	if (length >= required || (length == 0 && GetLastError() != ERROR_SUCCESS))
 	{
 		result.os_error = GetLastError();
-		result.error = result.os_error ? day_win32_env_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
+		result.error = result.os_error ? day_win32_error(result.os_error) : DAY_ERROR_BUFFER_TOO_SMALL;
 		day_arena_restore(arena, mark);
 		day_end_scratch(scratch);
 		return result;
@@ -123,7 +95,7 @@ day_Result day_get_env_table(day_Arena *arena, day_Env_Table *table)
 	if (!block)
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_env_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 		return result;
 	}
 	for (cursor = block; *cursor; cursor += strlen(cursor) + 1)
@@ -187,8 +159,8 @@ day_Result day_set_env_field(day_String name, day_String value)
 		return result;
 	}
 	scratch = day_begin_scratch();
-	native_name = day_win32_env_text(scratch.arena, name);
-	native_value = day_win32_env_text(scratch.arena, value);
+	native_name = day_win32_text(scratch.arena, name);
+	native_value = day_win32_text(scratch.arena, value);
 	if (!native_name || !native_value)
 	{
 		result.error = DAY_ERROR_OUT_OF_MEMORY;
@@ -198,7 +170,7 @@ day_Result day_set_env_field(day_String name, day_String value)
 	if (!SetEnvironmentVariableA(native_name, native_value))
 	{
 		result.os_error = GetLastError();
-		result.error = day_win32_env_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 	}
 	day_end_scratch(scratch);
 	return result;
@@ -215,7 +187,7 @@ day_Result day_remove_env_field(day_String name)
 		return result;
 	}
 	scratch = day_begin_scratch();
-	native_name = day_win32_env_text(scratch.arena, name);
+	native_name = day_win32_text(scratch.arena, name);
 	if (!native_name)
 	{
 		result.error = DAY_ERROR_OUT_OF_MEMORY;
@@ -226,7 +198,7 @@ day_Result day_remove_env_field(day_String name)
 	{
 		result.os_error = GetLastError();
 		if (result.os_error == ERROR_ENVVAR_NOT_FOUND) result.os_error = 0;
-		result.error = day_win32_env_error(result.os_error);
+		result.error = day_win32_error(result.os_error);
 	}
 	day_end_scratch(scratch);
 	return result;
