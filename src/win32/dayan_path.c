@@ -47,27 +47,28 @@ static void day_win32_canonicalize_path(char *path, day_u64 size)
 	}
 }
 
-day_String_Result day_get_executable_path(day_Arena *arena)
+day_Result day_get_executable_path(day_Arena *arena, day_String *path)
 {
-	day_String_Result result = {0};
+	day_Result result = {0};
 	day_u64 mark;
-	char *path;
+	char *data;
 	DWORD length;
 	const day_u64 capacity = 32768;
 
-	if (!arena)
+	if (path) *path = (day_String){0};
+	if (!arena || !path)
 	{
 		result.error = DAY_ERROR_INVALID_ARGUMENT;
 		return result;
 	}
 	mark = day_arena_mark(arena);
-	path = day_arena_reserve(arena, capacity);
-	if (!path)
+	data = day_arena_reserve(arena, capacity);
+	if (!data)
 	{
 		result.error = DAY_ERROR_OUT_OF_MEMORY;
 		return result;
 	}
-	length = GetModuleFileNameA(NULL, path, (DWORD)capacity);
+	length = GetModuleFileNameA(NULL, data, (DWORD)capacity);
 	if (!length || length >= capacity)
 	{
 		result.os_error = GetLastError();
@@ -75,21 +76,22 @@ day_String_Result day_get_executable_path(day_Arena *arena)
 		day_arena_restore(arena, mark);
 		return result;
 	}
-	day_win32_canonicalize_path(path, length);
+	day_win32_canonicalize_path(data, length);
 	arena->used += (day_u64)length + 1;
-	result.value = day_string_from_data(path, length);
+	*path = day_string_from_data(data, length);
 	return result;
 }
 
-day_String_Result day_get_current_directory(day_Arena *arena)
+day_Result day_get_current_directory(day_Arena *arena, day_String *path)
 {
-	day_String_Result result = {0};
+	day_Result result = {0};
 	day_u64 mark;
 	DWORD required;
 	DWORD length;
-	char *path;
+	char *data;
 
-	if (!arena)
+	if (path) *path = (day_String){0};
+	if (!arena || !path)
 	{
 		result.error = DAY_ERROR_INVALID_ARGUMENT;
 		return result;
@@ -102,13 +104,13 @@ day_String_Result day_get_current_directory(day_Arena *arena)
 		return result;
 	}
 	mark = day_arena_mark(arena);
-	path = day_arena_reserve(arena, required);
-	if (!path)
+	data = day_arena_reserve(arena, required);
+	if (!data)
 	{
 		result.error = DAY_ERROR_OUT_OF_MEMORY;
 		return result;
 	}
-	length = GetCurrentDirectoryA(required, path);
+	length = GetCurrentDirectoryA(required, data);
 	if (!length || length >= required)
 	{
 		result.os_error = GetLastError();
@@ -116,15 +118,15 @@ day_String_Result day_get_current_directory(day_Arena *arena)
 		day_arena_restore(arena, mark);
 		return result;
 	}
-	day_win32_canonicalize_path(path, length);
+	day_win32_canonicalize_path(data, length);
 	arena->used += (day_u64)length + 1;
-	result.value = day_string_from_data(path, length);
+	*path = day_string_from_data(data, length);
 	return result;
 }
 
-day_String_Result day_get_absolute_path(day_Arena *arena, day_String path)
+day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute_path)
 {
-	day_String_Result result = {0};
+	day_Result result = {0};
 	day_Scratch scratch;
 	day_u64 mark;
 	char *native_path;
@@ -132,7 +134,8 @@ day_String_Result day_get_absolute_path(day_Arena *arena, day_String path)
 	DWORD required;
 	DWORD length;
 
-	if (!arena || !path.data || path.size == 0)
+	if (absolute_path) *absolute_path = (day_String){0};
+	if (!arena || !absolute_path || !path.data || path.size == 0)
 	{
 		result.error = DAY_ERROR_INVALID_ARGUMENT;
 		return result;
@@ -172,7 +175,7 @@ day_String_Result day_get_absolute_path(day_Arena *arena, day_String path)
 	}
 	day_win32_canonicalize_path(absolute, length);
 	arena->used += (day_u64)length + 1;
-	result.value = day_string_from_data(absolute, length);
+	*absolute_path = day_string_from_data(absolute, length);
 	day_end_scratch(scratch);
 	return result;
 }

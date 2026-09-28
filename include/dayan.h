@@ -78,14 +78,6 @@ typedef struct day_Result
 }
 day_Result;
 
-typedef struct day_String_Result
-{
-	day_String value;
-	day_Error error;
-	day_u32 os_error;
-}
-day_String_Result;
-
 typedef struct day_File
 {
 	day_uptr value;
@@ -133,46 +125,6 @@ typedef struct day_File_Info
 }
 day_File_Info;
 
-typedef struct day_File_Result
-{
-	day_File file;
-	day_Error error;
-	day_u32 os_error;
-}
-day_File_Result;
-
-typedef struct day_File_Info_Result
-{
-	day_File_Info info;
-	day_Error error;
-	day_u32 os_error;
-}
-day_File_Info_Result;
-
-typedef struct day_File_Size_Result
-{
-	day_u64 size;
-	day_Error error;
-	day_u32 os_error;
-}
-day_File_Size_Result;
-
-typedef struct day_File_Seek_Result
-{
-	day_u64 position;
-	day_Error error;
-	day_u32 os_error;
-}
-day_File_Seek_Result;
-
-typedef struct day_IO_Result
-{
-	day_u64 size;
-	day_Error error;
-	day_u32 os_error;
-}
-day_IO_Result;
-
 #define DAY_LIT(text) ((day_String){ .data = (char *)(text), .size = sizeof(text) - 1 })
 
 day_Arena day_arena_create(day_u64 initial_reserve);
@@ -216,18 +168,18 @@ day_String_Array day_string_split_lines(day_Arena *arena, day_String string);
 day_String_Array day_string_split_block(day_Arena *arena, day_String string);
 day_u32 day_string_count_lines(day_String string);
 
-day_File_Result day_access_file(day_String path, day_File_Intent intent, day_File_Access access);
+day_Result day_access_file(day_String path, day_File_Intent intent, day_File_Access access, day_File *file);
 day_b32 day_file_is_valid(day_File file);
 day_Result day_close_file(day_File file);
-day_File_Info_Result day_get_file_info(day_String path);
-day_File_Size_Result day_get_file_size(day_File file);
-day_File_Seek_Result day_set_file_cursor(day_File file, day_Seek_Origin origin, day_i64 distance);
-day_IO_Result day_read_file(day_File file, void *data, day_u64 size);
-day_IO_Result day_write_file(day_File file, const void *data, day_u64 size);
+day_Result day_get_file_info(day_String path, day_File_Info *info);
+day_Result day_get_file_size(day_File file, day_u64 *size);
+day_Result day_set_file_cursor(day_File file, day_Seek_Origin origin, day_i64 distance, day_u64 *position);
+day_Result day_read_file(day_File file, void *data, day_u64 size, day_u64 *bytes_read);
+day_Result day_write_file(day_File file, const void *data, day_u64 size, day_u64 *bytes_written);
 
-day_String_Result day_get_executable_path(day_Arena *arena);
-day_String_Result day_get_current_directory(day_Arena *arena);
-day_String_Result day_get_absolute_path(day_Arena *arena, day_String path);
+day_Result day_get_executable_path(day_Arena *arena, day_String *path);
+day_Result day_get_current_directory(day_Arena *arena, day_String *path);
+day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute);
 day_Result day_create_directory(day_String path);
 day_Result day_remove_directory(day_String path);
 
