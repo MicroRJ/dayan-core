@@ -67,6 +67,7 @@ typedef enum day_Error
 	DAY_ERROR_ALREADY_EXISTS,
 	DAY_ERROR_OUT_OF_MEMORY,
 	DAY_ERROR_NOT_SUPPORTED,
+	DAY_ERROR_BUFFER_TOO_SMALL,
 }
 day_Error;
 
@@ -76,6 +77,14 @@ typedef struct day_Result
 	day_u32 os_error;
 }
 day_Result;
+
+typedef struct day_String_Result
+{
+	day_String value;
+	day_Error error;
+	day_u32 os_error;
+}
+day_String_Result;
 
 typedef struct day_File
 {
@@ -215,5 +224,11 @@ day_File_Size_Result day_get_file_size(day_File file);
 day_File_Seek_Result day_set_file_cursor(day_File file, day_Seek_Origin origin, day_i64 distance);
 day_IO_Result day_read_file(day_File file, void *data, day_u64 size);
 day_IO_Result day_write_file(day_File file, const void *data, day_u64 size);
+
+day_String_Result day_get_executable_path(day_Arena *arena);
+day_String_Result day_get_current_directory(day_Arena *arena);
+day_String_Result day_get_absolute_path(day_Arena *arena, day_String path);
+day_Result day_create_directory(day_String path);
+day_Result day_remove_directory(day_String path);
 
 #endif
