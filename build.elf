@@ -20,13 +20,36 @@ compile_platform := {
 	dependencies = { prepare },
 }
 
-platform_library := {
-	name = "archive platform.lib",
-	command_line = f"${librarian} /nologo /out:build/platform.lib build/obj/platform.obj",
-	inputs = { "build/obj/platform.obj" },
-	outputs = { "build/platform.lib" },
+compile_dayan := {
+	name = "compile dayan",
+	command_line = f"${compiler}${compile_options} /c src/dayan.c /Fobuild/obj/dayan.obj /Fdbuild/obj/dayan.pdb",
+	inputs = { "src/dayan.c", "src/dayan_memory.h", "include/dayan.h" },
+	outputs = { "build/obj/dayan.obj" },
+	include_dirs = { "include" },
+	dependencies = { prepare },
+}
+
+compile_dayan_memory := {
+	name = "compile dayan memory",
+	command_line = f"${compiler}${compile_options} /c src/dayan_memory.c /Fobuild/obj/dayan_memory.obj /Fdbuild/obj/dayan_memory.pdb",
+	inputs = {
+		"src/dayan_memory.c",
+		"src/dayan_memory.h",
+		"src/win32/dayan_memory.c",
+		"include/dayan.h",
+	},
+	outputs = { "build/obj/dayan_memory.obj" },
+	include_dirs = { "include" },
+	dependencies = { prepare },
+}
+
+dayan_library := {
+	name = "archive dayan.lib",
+	command_line = f"${librarian} /nologo /out:build/dayan.lib build/obj/dayan.obj build/obj/dayan_memory.obj build/obj/platform.obj",
+	inputs = { "build/obj/dayan.obj", "build/obj/dayan_memory.obj", "build/obj/platform.obj" },
+	outputs = { "build/dayan.lib" },
 	include_dirs = {},
-	dependencies = { compile_platform },
+	dependencies = { compile_dayan, compile_dayan_memory, compile_platform },
 }
 
 compile_tests := {
@@ -40,11 +63,11 @@ compile_tests := {
 
 link_tests := {
 	name = "link platform tests",
-	command_line = f"${compiler} /nologo build/obj/platform_tests.obj build/platform.lib /Febuild/platform_tests.exe /link /DEBUG /PDB:build/platform_tests.pdb",
-	inputs = { "build/obj/platform_tests.obj", "build/platform.lib" },
+	command_line = f"${compiler} /nologo build/obj/platform_tests.obj build/dayan.lib /Febuild/platform_tests.exe /link /DEBUG /PDB:build/platform_tests.pdb",
+	inputs = { "build/obj/platform_tests.obj", "build/dayan.lib" },
 	outputs = { "build/platform_tests.exe" },
 	include_dirs = {},
-	dependencies = { compile_tests, platform_library },
+	dependencies = { compile_tests, dayan_library },
 }
 
 run_tests := {
@@ -64,11 +87,11 @@ options := {
 entries := {}
 
 entries.lib = fun() {
-	ret manny.build({ targets = { platform_library }, options = options })
+	ret manny.build({ targets = { dayan_library }, options = options })
 }
 
 entries.build = fun() {
-	ret manny.build({ targets = { platform_library }, options = options })
+	ret manny.build({ targets = { dayan_library }, options = options })
 }
 
 entries.test = fun() {
