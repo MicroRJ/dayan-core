@@ -12,18 +12,18 @@ static day_Error day_win32_file_error(DWORD error)
 {
 	switch (error)
 	{
-	case ERROR_SUCCESS: return DAY_ERROR_NONE;
-	case ERROR_INVALID_PARAMETER: return DAY_ERROR_INVALID_ARGUMENT;
-	case ERROR_FILE_NOT_FOUND:
-	case ERROR_PATH_NOT_FOUND: return DAY_ERROR_NOT_FOUND;
-	case ERROR_ACCESS_DENIED: return DAY_ERROR_ACCESS_DENIED;
-	case ERROR_ALREADY_EXISTS:
-	case ERROR_FILE_EXISTS: return DAY_ERROR_ALREADY_EXISTS;
-	case ERROR_NOT_ENOUGH_MEMORY:
-	case ERROR_OUTOFMEMORY: return DAY_ERROR_OUT_OF_MEMORY;
-	case ERROR_NOT_SUPPORTED:
-	case ERROR_CALL_NOT_IMPLEMENTED: return DAY_ERROR_NOT_SUPPORTED;
-	default: return DAY_ERROR_UNKNOWN;
+		case ERROR_SUCCESS: return DAY_ERROR_NONE;
+		case ERROR_INVALID_PARAMETER: return DAY_ERROR_INVALID_ARGUMENT;
+		case ERROR_FILE_NOT_FOUND:
+		case ERROR_PATH_NOT_FOUND: return DAY_ERROR_NOT_FOUND;
+		case ERROR_ACCESS_DENIED: return DAY_ERROR_ACCESS_DENIED;
+		case ERROR_ALREADY_EXISTS:
+		case ERROR_FILE_EXISTS: return DAY_ERROR_ALREADY_EXISTS;
+		case ERROR_NOT_ENOUGH_MEMORY:
+		case ERROR_OUTOFMEMORY: return DAY_ERROR_OUT_OF_MEMORY;
+		case ERROR_NOT_SUPPORTED:
+		case ERROR_CALL_NOT_IMPLEMENTED: return DAY_ERROR_NOT_SUPPORTED;
+		default: return DAY_ERROR_UNKNOWN;
 	}
 }
 
@@ -79,14 +79,12 @@ day_File_Result day_access_file(day_String path, day_File_Intent intent, day_Fil
 
 	switch (intent)
 	{
-	case DAY_FILE_CREATE_ALWAYS: disposition = CREATE_ALWAYS; break;
-	case DAY_FILE_CREATE_NEW: disposition = CREATE_NEW; break;
-	case DAY_FILE_OPEN_ALWAYS: disposition = OPEN_ALWAYS; break;
-	case DAY_FILE_OPEN_EXISTING: disposition = OPEN_EXISTING; break;
-	case DAY_FILE_TRUNCATE_EXISTING: disposition = TRUNCATE_EXISTING; break;
-	default:
-		result.error = DAY_ERROR_INVALID_ARGUMENT;
-		return result;
+		case DAY_FILE_CREATE_ALWAYS: disposition = CREATE_ALWAYS; break;
+		case DAY_FILE_CREATE_NEW: disposition = CREATE_NEW; break;
+		case DAY_FILE_OPEN_ALWAYS: disposition = OPEN_ALWAYS; break;
+		case DAY_FILE_OPEN_EXISTING: disposition = OPEN_EXISTING; break;
+		case DAY_FILE_TRUNCATE_EXISTING: disposition = TRUNCATE_EXISTING; break;
+		default: result.error = DAY_ERROR_INVALID_ARGUMENT; return result;
 	}
 
 	scratch = day_begin_scratch();
