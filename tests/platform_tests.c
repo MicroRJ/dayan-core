@@ -67,6 +67,9 @@ int main(void)
 	Platform_String_Result absolute_path = platform_get_absolute_path(".", path_buffer, sizeof(path_buffer));
 	assert(absolute_path.error == PLATFORM_ERROR_NONE);
 	assert(absolute_path.size > 0);
+	Platform_String_Result executable_path = platform_get_executable_path(path_buffer, sizeof(path_buffer));
+	assert(executable_path.error == PLATFORM_ERROR_NONE);
+	assert(executable_path.size > 0);
 	assert(platform_executable_resolves("cmd"));
 	assert(platform_create_directories("build/platform_test/a/b"));
 	assert(platform_copy_file("build/platform_tests.exe", "build/platform_test/a/source.tmp", PLATFORM_TRUE));

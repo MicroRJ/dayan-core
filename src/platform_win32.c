@@ -282,6 +282,27 @@ B32 platform_executable_resolves(const char *name)
 	return length > 0 && length < sizeof(buffer);
 }
 
+Platform_String_Result platform_get_executable_path(char *buffer, U64 capacity)
+{
+	Platform_String_Result result = {0};
+	char path[32768];
+	DWORD length = GetModuleFileNameA(NULL, path, sizeof(path));
+	if (!length || length >= sizeof(path)) {
+		result.os_error = GetLastError();
+		result.error = result.os_error ? win32_platform_error(result.os_error) : PLATFORM_ERROR_BUFFER_TOO_SMALL;
+		return result;
+	}
+	result.size = length;
+	result.required_capacity = (U64)length + 1;
+	if (!buffer) return result;
+	if (capacity < result.required_capacity) {
+		result.error = PLATFORM_ERROR_BUFFER_TOO_SMALL;
+		return result;
+	}
+	memcpy(buffer, path, result.required_capacity);
+	return result;
+}
+
 Platform_String_Result platform_get_current_directory(char *buffer, U64 capacity)
 {
 	Platform_String_Result result = {0};
