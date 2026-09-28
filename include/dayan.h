@@ -71,6 +71,32 @@ typedef struct day_Env_Table
 }
 day_Env_Table;
 
+typedef struct day_Process
+{
+	day_uptr handle;
+	day_uptr standard_output;
+	day_uptr standard_error;
+}
+day_Process;
+
+typedef struct day_Process_Options
+{
+	day_String working_directory;
+	day_b32 capture_output;
+	day_b32 capture_error;
+	day_b32 hide_window;
+}
+day_Process_Options;
+
+typedef enum day_Process_Stream
+{
+	DAY_PROCESS_OUTPUT,
+	DAY_PROCESS_ERROR,
+}
+day_Process_Stream;
+
+#define DAY_WAIT_INFINITE ((day_u32)-1)
+
 typedef enum day_Error
 {
 	DAY_ERROR_NONE,
@@ -202,5 +228,13 @@ day_Result day_get_env_field(day_Arena *arena, day_String name, day_String *valu
 day_Result day_get_env_table(day_Arena *arena, day_Env_Table *table);
 day_Result day_set_env_field(day_String name, day_String value);
 day_Result day_remove_env_field(day_String name);
+
+day_Result day_start_process(day_String command, day_Process_Options options, day_Process *process);
+day_b32 day_process_is_valid(day_Process process);
+day_Result day_read_process(day_Process *process, day_Process_Stream stream, void *data, day_u64 capacity, day_u64 *size, day_b32 *end_of_stream);
+day_Result day_wait_process(day_Process process, day_u32 milliseconds, day_b32 *completed, day_u32 *exit_code);
+day_Result day_close_process(day_Process *process);
+day_u64 day_current_process_id(void);
+void day_exit_process(day_i32 exit_code);
 
 #endif
