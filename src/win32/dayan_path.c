@@ -180,6 +180,28 @@ day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *
 	return result;
 }
 
+day_b32 day_executable_resolves(day_String name)
+{
+	day_Scratch scratch;
+	char *native_name;
+	char *resolved;
+	DWORD length;
+	const day_u64 capacity = 32768;
+
+	if (!name.data || name.size == 0) return 0;
+	scratch = day_begin_scratch();
+	native_name = day_win32_path_text(scratch.arena, name);
+	resolved = day_arena_push(scratch.arena, capacity);
+	if (!native_name || !resolved)
+	{
+		day_end_scratch(scratch);
+		return 0;
+	}
+	length = SearchPathA(NULL, native_name, ".exe", (DWORD)capacity, resolved, NULL);
+	day_end_scratch(scratch);
+	return length > 0 && length < capacity;
+}
+
 day_Result day_create_directory(day_String path)
 {
 	day_Result result = {0};

@@ -194,6 +194,7 @@ day_Result day_write_file(day_File file, const void *data, day_u64 size, day_u64
 day_Result day_get_executable_path(day_Arena *arena, day_String *path);
 day_Result day_get_current_directory(day_Arena *arena, day_String *path);
 day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute);
+day_b32 day_executable_resolves(day_String name);
 day_Result day_create_directory(day_String path);
 day_Result day_remove_directory(day_String path);
 
