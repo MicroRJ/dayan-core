@@ -14,6 +14,57 @@ static void day_win32_canonicalize_path(char *path, day_u64 size)
 	}
 }
 
+typedef struct day_Win32_Directory
+{
+	HANDLE find;
+	WIN32_FIND_DATAA data;
+}
+day_Win32_Directory;
+
+static void day_win32_directory_entry(day_Win32_Directory *directory, day_Directory_Entry *entry)
+{
+	ULARGE_INTEGER size;
+	size.LowPart = directory->data.nFileSizeLow;
+	size.HighPart = directory->data.nFileSizeHigh;
+	*entry = (day_Directory_Entry){
+		.name = day_string_from_cstring(directory->data.cFileName),
+		.info = {
+			.size = size.QuadPart,
+			.created_unix_ms = day_win32_file_time_to_unix_ms(directory->data.ftCreationTime),
+			.accessed_unix_ms = day_win32_file_time_to_unix_ms(directory->data.ftLastAccessTime),
+			.modified_unix_ms = day_win32_file_time_to_unix_ms(directory->data.ftLastWriteTime),
+			.is_directory = (directory->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0,
+			.is_symbolic_link = (directory->data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0,
+		},
+	};
+}
+
+static day_Result day_win32_find_next_file(day_Win32_Directory *directory,
+	day_Directory_Entry *entry, day_Directory_Status *status, day_b32 use_current)
+{
+	day_Result result = {0};
+	for (;;)
+	{
+		if (!use_current && !FindNextFileA(directory->find, &directory->data))
+		{
+			result.os_error = GetLastError();
+			if (result.os_error == ERROR_NO_MORE_FILES)
+			{
+				result.os_error = 0;
+				*status = DAY_DIRECTORY_END;
+				return result;
+			}
+			result.error = day_win32_error(result.os_error);
+			return result;
+		}
+		use_current = 0;
+		if (strcmp(directory->data.cFileName, ".") == 0 || strcmp(directory->data.cFileName, "..") == 0) continue;
+		day_win32_directory_entry(directory, entry);
+		*status = DAY_DIRECTORY_ENTRY;
+		return result;
+	}
+}
+
 day_Result day_get_executable_path(day_Arena *arena, day_String *path)
 {
 	day_Result result = {0};
@@ -229,5 +280,85 @@ day_Result day_remove_directory(day_String path)
 		result.error = day_win32_error(result.os_error);
 	}
 	day_end_scratch(scratch);
+	return result;
+}
+
+day_Result day_find_first_file(day_Path_Builder *path, day_Directory *directory,
+	day_Directory_Entry *entry, day_Directory_Status *status)
+{
+	day_Result result = {0};
+	day_Path_Mark mark;
+	day_Win32_Directory *state;
+
+	if (directory) *directory = (day_Directory){0};
+	if (entry) *entry = (day_Directory_Entry){0};
+	if (status) *status = DAY_DIRECTORY_END;
+	if (!path || !path->data || !directory || !entry || !status)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	state = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*state));
+	if (!state)
+	{
+		result.error = DAY_ERROR_OUT_OF_MEMORY;
+		return result;
+	}
+	mark = day_path_mark(path);
+	if (!day_path_push(path, DAY_LIT("*")))
+	{
+		HeapFree(GetProcessHeap(), 0, state);
+		result.error = DAY_ERROR_BUFFER_TOO_SMALL;
+		return result;
+	}
+	state->find = FindFirstFileA(path->data, &state->data);
+	day_path_pop(path, mark);
+	if (state->find == INVALID_HANDLE_VALUE)
+	{
+		result.os_error = GetLastError();
+		HeapFree(GetProcessHeap(), 0, state);
+		if (result.os_error == ERROR_FILE_NOT_FOUND)
+		{
+			result.os_error = 0;
+			return result;
+		}
+		result.error = day_win32_error(result.os_error);
+		return result;
+	}
+	directory->value = (day_uptr)state;
+	return day_win32_find_next_file(state, entry, status, 1);
+}
+
+day_Result day_find_next_file(day_Directory *directory, day_Directory_Entry *entry, day_Directory_Status *status)
+{
+	day_Result result = {0};
+	if (entry) *entry = (day_Directory_Entry){0};
+	if (status) *status = DAY_DIRECTORY_END;
+	if (!directory || !directory->value || !entry || !status)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	return day_win32_find_next_file((day_Win32_Directory *)directory->value, entry, status, 0);
+}
+
+day_Result day_close_directory(day_Directory *directory)
+{
+	day_Result result = {0};
+	day_Win32_Directory *state;
+	if (!directory)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	if (!directory->value) return result;
+	state = (day_Win32_Directory *)directory->value;
+	if (!FindClose(state->find))
+	{
+		result.os_error = GetLastError();
+		result.error = day_win32_error(result.os_error);
+	}
+	HeapFree(GetProcessHeap(), 0, state);
+	*directory = (day_Directory){0};
 	return result;
 }

@@ -1,4 +1,5 @@
 #include "platform.h"
+#include "dayan.h"
 
 #include <assert.h>
 #include <string.h>
@@ -86,6 +87,28 @@ int main(void)
 	}
 	assert(found_moved);
 	platform_close_directory(&directory_open.directory);
+	char day_path_storage[1024];
+	day_Path_Builder day_path;
+	day_Directory day_directory;
+	day_Directory_Entry day_entry;
+	day_Directory_Status day_status;
+	assert(day_path_builder_init(&day_path, day_path_storage, sizeof(day_path_storage), DAY_LIT("build/platform_test")));
+	day_Path_Mark day_mark = day_path_mark(&day_path);
+	assert(day_path_push(&day_path, DAY_LIT("a")));
+	assert(strcmp(day_path.data, "build/platform_test/a") == 0);
+	assert(day_find_first_file(&day_path, &day_directory, &day_entry, &day_status).error == DAY_ERROR_NONE);
+	found_moved = PLATFORM_FALSE;
+	while (day_status == DAY_DIRECTORY_ENTRY) {
+		if (day_string_is(day_entry.name, "moved.tmp")) {
+			found_moved = PLATFORM_TRUE;
+			assert(!day_entry.info.is_directory);
+		}
+		assert(day_find_next_file(&day_directory, &day_entry, &day_status).error == DAY_ERROR_NONE);
+	}
+	assert(found_moved);
+	assert(day_close_directory(&day_directory).error == DAY_ERROR_NONE);
+	day_path_pop(&day_path, day_mark);
+	assert(strcmp(day_path.data, "build/platform_test") == 0);
 	assert(!platform_remove_directory("build/platform_test"));
 	assert(platform_remove_tree("build/platform_test"));
 	assert(!platform_get_file_info("build/platform_test", &info));

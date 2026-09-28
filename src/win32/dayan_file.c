@@ -11,16 +11,6 @@ static HANDLE day_win32_handle_from_file(day_File file)
 	return (HANDLE)file.value;
 }
 
-static day_i64 day_win32_file_time_to_unix_ms(FILETIME time)
-{
-	ULARGE_INTEGER value;
-	const day_u64 unix_epoch = 116444736000000000ull;
-	value.LowPart = time.dwLowDateTime;
-	value.HighPart = time.dwHighDateTime;
-	if (value.QuadPart < unix_epoch) return 0;
-	return (day_i64)((value.QuadPart - unix_epoch) / 10000ull);
-}
-
 day_Result day_access_file(day_String path, day_File_Intent intent, day_File_Access access, day_File *file)
 {
 	day_Result result = {0};

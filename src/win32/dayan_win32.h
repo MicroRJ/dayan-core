@@ -46,4 +46,14 @@ static inline char *day_win32_path_text(day_Arena *arena, day_String path)
 	return result;
 }
 
+static inline day_i64 day_win32_file_time_to_unix_ms(FILETIME time)
+{
+	ULARGE_INTEGER value;
+	const day_u64 unix_epoch = 116444736000000000ull;
+	value.LowPart = time.dwLowDateTime;
+	value.HighPart = time.dwHighDateTime;
+	if (value.QuadPart < unix_epoch) return 0;
+	return (day_i64)((value.QuadPart - unix_epoch) / 10000ull);
+}
+
 #endif

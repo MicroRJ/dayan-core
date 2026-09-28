@@ -165,6 +165,37 @@ typedef struct day_File_Info
 }
 day_File_Info;
 
+typedef struct day_Path_Builder
+{
+	char *data;
+	day_u64 size;
+	day_u64 capacity;
+}
+day_Path_Builder;
+
+typedef day_u64 day_Path_Mark;
+
+typedef struct day_Directory
+{
+	day_uptr value;
+}
+day_Directory;
+
+typedef struct day_Directory_Entry
+{
+	// The name view remains valid until the next call or the directory is closed.
+	day_String name;
+	day_File_Info info;
+}
+day_Directory_Entry;
+
+typedef enum day_Directory_Status
+{
+	DAY_DIRECTORY_END,
+	DAY_DIRECTORY_ENTRY,
+}
+day_Directory_Status;
+
 #define DAY_LIT(text) ((day_String){ .data = (char *)(text), .size = sizeof(text) - 1 })
 
 day_Arena day_arena_create(day_u64 initial_reserve);
@@ -217,12 +248,20 @@ day_Result day_set_file_cursor(day_File file, day_Seek_Origin origin, day_i64 di
 day_Result day_read_file(day_File file, void *data, day_u64 size, day_u64 *bytes_read);
 day_Result day_write_file(day_File file, const void *data, day_u64 size, day_u64 *bytes_written);
 
+day_b32 day_path_builder_init(day_Path_Builder *path, char *storage, day_u64 capacity, day_String root);
+day_Path_Mark day_path_mark(const day_Path_Builder *path);
+day_b32 day_path_push(day_Path_Builder *path, day_String component);
+void day_path_pop(day_Path_Builder *path, day_Path_Mark mark);
+
 day_Result day_get_executable_path(day_Arena *arena, day_String *path);
 day_Result day_get_current_directory(day_Arena *arena, day_String *path);
 day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute);
 day_b32 day_executable_resolves(day_String name);
 day_Result day_create_directory(day_String path);
 day_Result day_remove_directory(day_String path);
+day_Result day_find_first_file(day_Path_Builder *path, day_Directory *directory, day_Directory_Entry *entry, day_Directory_Status *status);
+day_Result day_find_next_file(day_Directory *directory, day_Directory_Entry *entry, day_Directory_Status *status);
+day_Result day_close_directory(day_Directory *directory);
 
 day_Result day_get_env_field(day_Arena *arena, day_String name, day_String *value);
 day_Result day_get_env_table(day_Arena *arena, day_Env_Table *table);
