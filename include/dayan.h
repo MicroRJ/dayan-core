@@ -57,6 +57,20 @@ typedef struct day_String_Array
 }
 day_String_Array;
 
+typedef struct day_Env_Field
+{
+	day_String name;
+	day_String value;
+}
+day_Env_Field;
+
+typedef struct day_Env_Table
+{
+	day_Env_Field *items;
+	day_u32 count;
+}
+day_Env_Table;
+
 typedef enum day_Error
 {
 	DAY_ERROR_NONE,
@@ -182,5 +196,10 @@ day_Result day_get_current_directory(day_Arena *arena, day_String *path);
 day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute);
 day_Result day_create_directory(day_String path);
 day_Result day_remove_directory(day_String path);
+
+day_Result day_get_env_field(day_Arena *arena, day_String name, day_String *value);
+day_Result day_get_env_table(day_Arena *arena, day_Env_Table *table);
+day_Result day_set_env_field(day_String name, day_String value);
+day_Result day_remove_env_field(day_String name);
 
 #endif
