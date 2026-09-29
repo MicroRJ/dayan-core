@@ -96,6 +96,13 @@ typedef enum day_Process_Stream
 }
 day_Process_Stream;
 
+typedef enum day_Standard_Stream
+{
+	DAY_STANDARD_OUTPUT,
+	DAY_STANDARD_ERROR,
+}
+day_Standard_Stream;
+
 #define DAY_WAIT_INFINITE ((day_u32)-1)
 
 typedef day_u32 day_Thread_Function(void *context);
@@ -318,5 +325,17 @@ day_Result day_wait_condition(day_Condition *condition, day_Mutex *mutex);
 void day_signal_condition(day_Condition *condition);
 void day_broadcast_condition(day_Condition *condition);
 void day_destroy_condition(day_Condition *condition);
+
+day_u64 day_counter(void);
+day_u64 day_counter_frequency(void);
+day_i64 day_unix_time_ms(void);
+void day_sleep(day_u64 milliseconds);
+
+day_b32 day_stream_is_console(day_Standard_Stream stream);
+day_b32 day_console_supports_colors(day_Standard_Stream stream);
+day_Result day_enable_console_colors(day_Standard_Stream stream);
+day_Result day_write_console(day_Standard_Stream stream, const void *data, day_u64 size, day_u64 *written);
+
+day_Result day_error_message(day_Arena *arena, day_u32 os_error, day_String *message);
 
 #endif

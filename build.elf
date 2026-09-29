@@ -11,15 +11,6 @@ prepare := {
 	dependencies = {},
 }
 
-compile_platform := {
-	name = "compile platform",
-	command_line = f"${compiler}${compile_options} /c src/platform_win32.c /Fobuild/obj/platform.obj /Fdbuild/obj/platform.pdb",
-	inputs = { "src/platform_win32.c" },
-	outputs = { "build/obj/platform.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
 compile_dayan := {
 	name = "compile dayan",
 	command_line = f"${compiler}${compile_options} /c src/dayan.c /Fobuild/obj/dayan.obj /Fdbuild/obj/dayan.pdb",
@@ -113,37 +104,64 @@ compile_dayan_thread := {
 	dependencies = { prepare },
 }
 
+compile_dayan_time := {
+	name = "compile dayan time",
+	command_line = f"${compiler}${compile_options} /c src/dayan_time.c /Fobuild/obj/dayan_time.obj /Fdbuild/obj/dayan_time.pdb",
+	inputs = { "src/dayan_time.c", "src/win32/dayan_time.c", "src/win32/dayan_win32.h", "include/dayan.h" },
+	outputs = { "build/obj/dayan_time.obj" },
+	include_dirs = { "include" },
+	dependencies = { prepare },
+}
+
+compile_dayan_console := {
+	name = "compile dayan console",
+	command_line = f"${compiler}${compile_options} /c src/dayan_console.c /Fobuild/obj/dayan_console.obj /Fdbuild/obj/dayan_console.pdb",
+	inputs = { "src/dayan_console.c", "src/win32/dayan_console.c", "src/win32/dayan_win32.h", "include/dayan.h" },
+	outputs = { "build/obj/dayan_console.obj" },
+	include_dirs = { "include" },
+	dependencies = { prepare },
+}
+
+compile_dayan_error := {
+	name = "compile dayan error",
+	command_line = f"${compiler}${compile_options} /c src/dayan_error.c /Fobuild/obj/dayan_error.obj /Fdbuild/obj/dayan_error.pdb",
+	inputs = { "src/dayan_error.c", "src/win32/dayan_error.c", "src/win32/dayan_win32.h", "include/dayan.h" },
+	outputs = { "build/obj/dayan_error.obj" },
+	include_dirs = { "include" },
+	dependencies = { prepare },
+}
+
 dayan_library := {
 	name = "archive dayan.lib",
-	command_line = f"${librarian} /nologo /out:build/dayan.lib build/obj/dayan.obj build/obj/dayan_memory.obj build/obj/dayan_file.obj build/obj/dayan_path.obj build/obj/dayan_env.obj build/obj/dayan_process.obj build/obj/dayan_thread.obj build/obj/platform.obj",
-	inputs = { "build/obj/dayan.obj", "build/obj/dayan_memory.obj", "build/obj/dayan_file.obj", "build/obj/dayan_path.obj", "build/obj/dayan_env.obj", "build/obj/dayan_process.obj", "build/obj/dayan_thread.obj", "build/obj/platform.obj" },
+	command_line = f"${librarian} /nologo /out:build/dayan.lib build/obj/dayan.obj build/obj/dayan_memory.obj build/obj/dayan_file.obj build/obj/dayan_path.obj build/obj/dayan_env.obj build/obj/dayan_process.obj build/obj/dayan_thread.obj build/obj/dayan_time.obj build/obj/dayan_console.obj build/obj/dayan_error.obj",
+	inputs = { "build/obj/dayan.obj", "build/obj/dayan_memory.obj", "build/obj/dayan_file.obj", "build/obj/dayan_path.obj", "build/obj/dayan_env.obj", "build/obj/dayan_process.obj", "build/obj/dayan_thread.obj", "build/obj/dayan_time.obj", "build/obj/dayan_console.obj", "build/obj/dayan_error.obj" },
 	outputs = { "build/dayan.lib" },
 	include_dirs = {},
-	dependencies = { compile_dayan, compile_dayan_memory, compile_dayan_file, compile_dayan_path, compile_dayan_env, compile_dayan_process, compile_dayan_thread, compile_platform },
+	dependencies = { compile_dayan, compile_dayan_memory, compile_dayan_file, compile_dayan_path, compile_dayan_env, compile_dayan_process, compile_dayan_thread, compile_dayan_time, compile_dayan_console, compile_dayan_error },
 }
 
 compile_tests := {
-	name = "compile platform tests",
-	command_line = f"${compiler}${compile_options} /c tests/platform_tests.c /Fobuild/obj/platform_tests.obj /Fdbuild/obj/platform_tests.pdb",
-	inputs = { "tests/platform_tests.c", "include/dayan.h", "include/platform.h" },
-	outputs = { "build/obj/platform_tests.obj" },
+	name = "compile dayan tests",
+	command_line = f"${compiler}${compile_options} /c tests/dayan_tests.c /Fobuild/obj/dayan_tests.obj /Fdbuild/obj/dayan_tests.pdb",
+	inputs = { "tests/dayan_tests.c", "include/dayan.h" },
+	outputs = { "build/obj/dayan_tests.obj" },
 	include_dirs = { "include" },
 	dependencies = { prepare },
 }
 
 link_tests := {
-	name = "link platform tests",
-	command_line = f"${compiler} /nologo build/obj/platform_tests.obj build/dayan.lib /Febuild/platform_tests.exe /link /DEBUG /PDB:build/platform_tests.pdb",
-	inputs = { "build/obj/platform_tests.obj", "build/dayan.lib" },
-	outputs = { "build/platform_tests.exe" },
+	name = "link dayan tests",
+	command_line = f"${compiler} /nologo build/obj/dayan_tests.obj build/dayan.lib /Febuild/dayan_tests.exe /link /DEBUG /PDB:build/dayan_tests.pdb",
+	inputs = { "build/obj/dayan_tests.obj", "build/dayan.lib" },
+	outputs = { "build/dayan_tests.exe" },
 	include_dirs = {},
 	dependencies = { compile_tests, dayan_library },
 }
 
 run_tests := {
-	name = "run platform tests",
-	command_line = "build\\platform_tests.exe",
-	inputs = { "build/platform_tests.exe" },
+	name = "run dayan tests",
+	command_line = "build\\dayan_tests.exe",
+	inputs = { "build/dayan_tests.exe" },
 	outputs = {},
 	include_dirs = {},
 	dependencies = { link_tests },
