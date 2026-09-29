@@ -1,5 +1,8 @@
-dayan := elf.load_file("dayan.elf")
-graph := dayan.create({ root = ".", output_directory = "build" })
+project ::= elf.load_file("project.elf")
+tasks ::= manny.load("c").project_to_tasks(project, {
+	output_directory = "build",
+	compile_options = { "/std:c11", "/W4", "/WX", "/Zi", "/Od" },
+})
 
 options := {
 	workers = 4,
@@ -9,15 +12,15 @@ options := {
 entries := {}
 
 entries.lib = fun() {
-	ret manny.build({ targets = { graph.library.task }, options = options })
+	ret manny.build({ targets = { tasks.targets.library }, options = options })
 }
 
 entries.build = fun() {
-	ret manny.build({ targets = { graph.library.task }, options = options })
+	ret manny.build({ targets = { tasks.default_task }, options = options })
 }
 
 entries.test = fun() {
-	ret manny.build({ targets = { graph.test }, options = options })
+	ret manny.build({ targets = { tasks.targets.tests }, options = options })
 }
 
 ret entries
