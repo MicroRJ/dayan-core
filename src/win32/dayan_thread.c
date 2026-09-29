@@ -156,8 +156,7 @@ day_Result day_wait_condition(day_Condition *condition, day_Mutex *mutex)
 		result.error = DAY_ERROR_INVALID_ARGUMENT;
 		return result;
 	}
-	if (!SleepConditionVariableSRW((CONDITION_VARIABLE *)condition->storage,
-		(SRWLOCK *)mutex->storage, INFINITE, 0))
+	if (!SleepConditionVariableSRW((CONDITION_VARIABLE *)condition->storage, (SRWLOCK *)mutex->storage, INFINITE, 0))
 	{
 		result.os_error = GetLastError();
 		result.error = day_win32_error(result.os_error);
