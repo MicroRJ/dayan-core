@@ -1,0 +1,120 @@
+// Reusable Dayan build graph.
+
+create ::= fun(options) {
+	options = options ?? {}
+	root := options.root ?? "."
+	output_directory := options.output_directory ?? ""
+	compiler := options.compiler ?? "clang-cl"
+	librarian := options.librarian ?? "lib"
+	compile_options := options.compile_options ?? " /nologo /std:c11 /W4 /WX /Zi /Od"
+
+	path ::= fun(relative) {
+		if root == "." || root == "" ? ret relative
+		ret f"${root}/${relative}"
+	}
+	if output_directory == "" ? { output_directory = path("build") }
+	object_directory := f"${output_directory}/obj"
+	include_directory := path("include")
+	quote ::= fun(value) ret f"\"${value}\""
+
+	prepare := {
+		name = "prepare Dayan build directory",
+		command_line = f"cmd /d /c if not exist ${quote(object_directory)} mkdir ${quote(object_directory)}",
+		inputs = {},
+		outputs = { object_directory },
+		include_dirs = {},
+		dependencies = {},
+	}
+
+	sources := {
+		{ name = "dayan",         path = "src/dayan.c",         inputs = { "src/dayan_memory.h" } },
+		{ name = "dayan_memory",  path = "src/dayan_memory.c",  inputs = { "src/dayan_memory.h", "src/win32/dayan_memory.c" } },
+		{ name = "dayan_file",    path = "src/dayan_file.c",    inputs = { "src/win32/dayan_file.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_path",    path = "src/dayan_path.c",    inputs = { "src/win32/dayan_path.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_env",     path = "src/dayan_env.c",     inputs = { "src/win32/dayan_env.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_process", path = "src/dayan_process.c", inputs = { "src/win32/dayan_process.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_thread",  path = "src/dayan_thread.c",  inputs = { "src/win32/dayan_thread.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_time",    path = "src/dayan_time.c",    inputs = { "src/win32/dayan_time.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_console", path = "src/dayan_console.c", inputs = { "src/win32/dayan_console.c", "src/win32/dayan_win32.h" } },
+		{ name = "dayan_error",   path = "src/dayan_error.c",   inputs = { "src/win32/dayan_error.c", "src/win32/dayan_win32.h" } },
+	}
+
+	objects := {}
+	compile_tasks := {}
+	for source := sources[...] ? {
+		source_path := path(source.path)
+		object := f"${object_directory}/${source.name}.obj"
+		inputs := { source_path, path("include/dayan.h") }
+		for input := source.inputs[...] ? { inputs:add(path(input)) }
+		compile := {
+			name = f"compile ${source.name}",
+			command_line = f"${quote(compiler)}${compile_options} /I${quote(include_directory)} /c ${quote(source_path)} /Fo${quote(object)} /Fd${quote(f"${object_directory}/${source.name}.pdb")}",
+			inputs = inputs,
+			outputs = { object },
+			include_dirs = { include_directory },
+			dependencies = { prepare },
+		}
+		objects:add(object)
+		compile_tasks:add(compile)
+	}
+
+	library_path := f"${output_directory}/dayan.lib"
+	archive_command := f"${quote(librarian)} /nologo /out:${quote(library_path)}"
+	for object := objects[...] ? { archive_command += f" ${quote(object)}" }
+	library_task := {
+		name = "archive dayan.lib",
+		command_line = archive_command,
+		inputs = objects,
+		outputs = { library_path },
+		include_dirs = {},
+		dependencies = compile_tasks,
+	}
+	library := {
+		name = "dayan",
+		kind = "static_library",
+		output = library_path,
+		task = library_task,
+		usage = {
+			include_directories = { include_directory },
+			defines = {},
+			compile_options = {},
+			link_options = {},
+			libraries = { library_path },
+		},
+	}
+
+	test_source := path("tests/dayan_tests.c")
+	test_object := f"${object_directory}/dayan_tests.obj"
+	test_executable := f"${output_directory}/dayan_tests.exe"
+	compile_tests := {
+		name = "compile dayan tests",
+		command_line = f"${quote(compiler)}${compile_options} /I${quote(include_directory)} /c ${quote(test_source)} /Fo${quote(test_object)} /Fd${quote(f"${object_directory}/dayan_tests.pdb")}",
+		inputs = { test_source, path("include/dayan.h") },
+		outputs = { test_object },
+		include_dirs = { include_directory },
+		dependencies = { prepare },
+	}
+	link_tests := {
+		name = "link dayan tests",
+		command_line = f"${quote(compiler)} /nologo ${quote(test_object)} ${quote(library_path)} /Fe${quote(test_executable)} /link /DEBUG /PDB:${quote(f"${output_directory}/dayan_tests.pdb")}",
+		inputs = { test_object, library_path },
+		outputs = { test_executable },
+		include_dirs = {},
+		dependencies = { compile_tests, library_task },
+	}
+	run_tests := {
+		name = "run dayan tests",
+		command_line = quote(test_executable),
+		inputs = { test_executable },
+		outputs = {},
+		include_dirs = {},
+		dependencies = { link_tests },
+	}
+
+	ret {
+		library = library,
+		test = run_tests,
+	}
+}
+
+ret { create = create }

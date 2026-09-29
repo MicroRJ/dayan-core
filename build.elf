@@ -1,171 +1,5 @@
-compiler := "clang-cl"
-librarian := "lib"
-compile_options := " /nologo /std:c11 /W4 /WX /Zi /Od /Iinclude"
-
-prepare := {
-	name = "prepare build directory",
-	command_line = "cmd /c if not exist build\\obj mkdir build\\obj",
-	inputs = {},
-	outputs = { "build/obj" },
-	include_dirs = {},
-	dependencies = {},
-}
-
-compile_dayan := {
-	name = "compile dayan",
-	command_line = f"${compiler}${compile_options} /c src/dayan.c /Fobuild/obj/dayan.obj /Fdbuild/obj/dayan.pdb",
-	inputs = { "src/dayan.c", "src/dayan_memory.h", "include/dayan.h" },
-	outputs = { "build/obj/dayan.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_memory := {
-	name = "compile dayan memory",
-	command_line = f"${compiler}${compile_options} /c src/dayan_memory.c /Fobuild/obj/dayan_memory.obj /Fdbuild/obj/dayan_memory.pdb",
-	inputs = {
-		"src/dayan_memory.c",
-		"src/dayan_memory.h",
-		"src/win32/dayan_memory.c",
-		"include/dayan.h",
-	},
-	outputs = { "build/obj/dayan_memory.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_file := {
-	name = "compile dayan file",
-	command_line = f"${compiler}${compile_options} /c src/dayan_file.c /Fobuild/obj/dayan_file.obj /Fdbuild/obj/dayan_file.pdb",
-	inputs = {
-		"src/dayan_file.c",
-		"src/win32/dayan_file.c",
-		"src/win32/dayan_win32.h",
-		"include/dayan.h",
-	},
-	outputs = { "build/obj/dayan_file.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_path := {
-	name = "compile dayan path",
-	command_line = f"${compiler}${compile_options} /c src/dayan_path.c /Fobuild/obj/dayan_path.obj /Fdbuild/obj/dayan_path.pdb",
-	inputs = {
-		"src/dayan_path.c",
-		"src/win32/dayan_path.c",
-		"src/win32/dayan_win32.h",
-		"include/dayan.h",
-	},
-	outputs = { "build/obj/dayan_path.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_env := {
-	name = "compile dayan environment",
-	command_line = f"${compiler}${compile_options} /c src/dayan_env.c /Fobuild/obj/dayan_env.obj /Fdbuild/obj/dayan_env.pdb",
-	inputs = {
-		"src/dayan_env.c",
-		"src/win32/dayan_env.c",
-		"src/win32/dayan_win32.h",
-		"include/dayan.h",
-	},
-	outputs = { "build/obj/dayan_env.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_process := {
-	name = "compile dayan process",
-	command_line = f"${compiler}${compile_options} /c src/dayan_process.c /Fobuild/obj/dayan_process.obj /Fdbuild/obj/dayan_process.pdb",
-	inputs = {
-		"src/dayan_process.c",
-		"src/win32/dayan_process.c",
-		"src/win32/dayan_win32.h",
-		"include/dayan.h",
-	},
-	outputs = { "build/obj/dayan_process.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_thread := {
-	name = "compile dayan thread",
-	command_line = f"${compiler}${compile_options} /c src/dayan_thread.c /Fobuild/obj/dayan_thread.obj /Fdbuild/obj/dayan_thread.pdb",
-	inputs = {
-		"src/dayan_thread.c",
-		"src/win32/dayan_thread.c",
-		"src/win32/dayan_win32.h",
-		"include/dayan.h",
-	},
-	outputs = { "build/obj/dayan_thread.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_time := {
-	name = "compile dayan time",
-	command_line = f"${compiler}${compile_options} /c src/dayan_time.c /Fobuild/obj/dayan_time.obj /Fdbuild/obj/dayan_time.pdb",
-	inputs = { "src/dayan_time.c", "src/win32/dayan_time.c", "src/win32/dayan_win32.h", "include/dayan.h" },
-	outputs = { "build/obj/dayan_time.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_console := {
-	name = "compile dayan console",
-	command_line = f"${compiler}${compile_options} /c src/dayan_console.c /Fobuild/obj/dayan_console.obj /Fdbuild/obj/dayan_console.pdb",
-	inputs = { "src/dayan_console.c", "src/win32/dayan_console.c", "src/win32/dayan_win32.h", "include/dayan.h" },
-	outputs = { "build/obj/dayan_console.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-compile_dayan_error := {
-	name = "compile dayan error",
-	command_line = f"${compiler}${compile_options} /c src/dayan_error.c /Fobuild/obj/dayan_error.obj /Fdbuild/obj/dayan_error.pdb",
-	inputs = { "src/dayan_error.c", "src/win32/dayan_error.c", "src/win32/dayan_win32.h", "include/dayan.h" },
-	outputs = { "build/obj/dayan_error.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-dayan_library := {
-	name = "archive dayan.lib",
-	command_line = f"${librarian} /nologo /out:build/dayan.lib build/obj/dayan.obj build/obj/dayan_memory.obj build/obj/dayan_file.obj build/obj/dayan_path.obj build/obj/dayan_env.obj build/obj/dayan_process.obj build/obj/dayan_thread.obj build/obj/dayan_time.obj build/obj/dayan_console.obj build/obj/dayan_error.obj",
-	inputs = { "build/obj/dayan.obj", "build/obj/dayan_memory.obj", "build/obj/dayan_file.obj", "build/obj/dayan_path.obj", "build/obj/dayan_env.obj", "build/obj/dayan_process.obj", "build/obj/dayan_thread.obj", "build/obj/dayan_time.obj", "build/obj/dayan_console.obj", "build/obj/dayan_error.obj" },
-	outputs = { "build/dayan.lib" },
-	include_dirs = {},
-	dependencies = { compile_dayan, compile_dayan_memory, compile_dayan_file, compile_dayan_path, compile_dayan_env, compile_dayan_process, compile_dayan_thread, compile_dayan_time, compile_dayan_console, compile_dayan_error },
-}
-
-compile_tests := {
-	name = "compile dayan tests",
-	command_line = f"${compiler}${compile_options} /c tests/dayan_tests.c /Fobuild/obj/dayan_tests.obj /Fdbuild/obj/dayan_tests.pdb",
-	inputs = { "tests/dayan_tests.c", "include/dayan.h" },
-	outputs = { "build/obj/dayan_tests.obj" },
-	include_dirs = { "include" },
-	dependencies = { prepare },
-}
-
-link_tests := {
-	name = "link dayan tests",
-	command_line = f"${compiler} /nologo build/obj/dayan_tests.obj build/dayan.lib /Febuild/dayan_tests.exe /link /DEBUG /PDB:build/dayan_tests.pdb",
-	inputs = { "build/obj/dayan_tests.obj", "build/dayan.lib" },
-	outputs = { "build/dayan_tests.exe" },
-	include_dirs = {},
-	dependencies = { compile_tests, dayan_library },
-}
-
-run_tests := {
-	name = "run dayan tests",
-	command_line = "build\\dayan_tests.exe",
-	inputs = { "build/dayan_tests.exe" },
-	outputs = {},
-	include_dirs = {},
-	dependencies = { link_tests },
-}
+dayan := elf.load_file("dayan.elf")
+graph := dayan.create({ root = ".", output_directory = "build" })
 
 options := {
 	workers = 4,
@@ -175,15 +9,15 @@ options := {
 entries := {}
 
 entries.lib = fun() {
-	ret manny.build({ targets = { dayan_library }, options = options })
+	ret manny.build({ targets = { graph.library.task }, options = options })
 }
 
 entries.build = fun() {
-	ret manny.build({ targets = { dayan_library }, options = options })
+	ret manny.build({ targets = { graph.library.task }, options = options })
 }
 
 entries.test = fun() {
-	ret manny.build({ targets = { run_tests }, options = options })
+	ret manny.build({ targets = { graph.test }, options = options })
 }
 
 ret entries
