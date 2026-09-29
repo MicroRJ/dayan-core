@@ -212,3 +212,8 @@ void day_exit_process(day_i32 exit_code)
 {
 	ExitProcess((UINT)exit_code);
 }
+
+void day_debug_break(void)
+{
+	DebugBreak();
+}

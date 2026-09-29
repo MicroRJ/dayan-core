@@ -226,6 +226,10 @@ day_Directory_Status;
 
 #define DAY_LIT(text) ((day_String){ .data = (char *)(text), .size = sizeof(text) - 1 })
 
+void *day_virtual_reserve(day_u64 size);
+day_b32 day_virtual_commit(void *memory, day_u64 size);
+void day_virtual_release(void *memory, day_u64 size);
+
 day_Arena day_arena_create(day_u64 initial_reserve);
 void day_arena_set_name(day_Arena *arena, const char *name);
 void day_arena_destroy(day_Arena *arena);
@@ -286,6 +290,7 @@ day_Result day_get_current_directory(day_Arena *arena, day_String *path);
 day_Result day_set_current_directory(day_String path);
 day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute);
 day_b32 day_executable_resolves(day_String name);
+day_Result day_copy_file(day_String source, day_String destination, day_b32 overwrite);
 day_Result day_remove_file(day_String path);
 day_Result day_move_file(day_String source, day_String destination, day_b32 overwrite);
 day_Result day_create_directory(day_String path);
@@ -308,6 +313,7 @@ day_Result day_wait_process(day_Process process, day_u32 milliseconds, day_b32 *
 day_Result day_close_process(day_Process *process);
 day_u64 day_current_process_id(void);
 void day_exit_process(day_i32 exit_code);
+void day_debug_break(void);
 
 day_Result day_start_thread(day_Thread_Function *function, void *context, day_Thread *thread);
 day_b32 day_thread_is_valid(day_Thread thread);

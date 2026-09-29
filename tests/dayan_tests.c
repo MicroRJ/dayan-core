@@ -23,6 +23,10 @@ int main(void)
 {
 	day_Arena arena = day_arena_create(DAY_KILOBYTES(64));
 	assert(arena.data);
+	void *memory = day_virtual_reserve(DAY_KILOBYTES(4));
+	assert(memory && day_virtual_commit(memory, DAY_KILOBYTES(4)));
+	memset(memory, 0x5a, DAY_KILOBYTES(4));
+	day_virtual_release(memory, DAY_KILOBYTES(4));
 
 	assert(day_counter_frequency() > 0);
 	day_u64 before = day_counter();
@@ -54,6 +58,9 @@ int main(void)
 	assert(info.size == sizeof(expected) && !info.is_directory && info.modified_unix_ms > 0);
 	assert(day_move_file(DAY_LIT("build/dayan_test/a/source.tmp"),
 		DAY_LIT("build/dayan_test/a/moved.tmp"), 0).error == DAY_ERROR_NONE);
+	assert(day_copy_file(DAY_LIT("build/dayan_test/a/moved.tmp"),
+		DAY_LIT("build/dayan_test/a/copied.tmp"), 0).error == DAY_ERROR_NONE);
+	assert(day_remove_file(DAY_LIT("build/dayan_test/a/copied.tmp")).error == DAY_ERROR_NONE);
 
 	char path_storage[1024];
 	day_Path_Builder path;

@@ -247,6 +247,35 @@ day_b32 day_executable_resolves(day_String name)
 	return length > 0 && length < capacity;
 }
 
+day_Result day_copy_file(day_String source, day_String destination, day_b32 overwrite)
+{
+	day_Result result = {0};
+	day_Scratch scratch;
+	char *native_source;
+	char *native_destination;
+	if (!source.data || source.size == 0 || !destination.data || destination.size == 0)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	scratch = day_begin_scratch();
+	native_source = day_win32_path_text(scratch.arena, source);
+	native_destination = day_win32_path_text(scratch.arena, destination);
+	if (!native_source || !native_destination)
+	{
+		result.error = DAY_ERROR_OUT_OF_MEMORY;
+		day_end_scratch(scratch);
+		return result;
+	}
+	if (!CopyFileA(native_source, native_destination, !overwrite))
+	{
+		result.os_error = GetLastError();
+		result.error = day_win32_error(result.os_error);
+	}
+	day_end_scratch(scratch);
+	return result;
+}
+
 day_Result day_remove_file(day_String path)
 {
 	day_Result result = {0};
