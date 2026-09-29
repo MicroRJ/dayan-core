@@ -142,6 +142,33 @@ day_Result day_get_current_directory(day_Arena *arena, day_String *path)
 	return result;
 }
 
+day_Result day_set_current_directory(day_String path)
+{
+	day_Result result = {0};
+	day_Scratch scratch;
+	char *native_path;
+	if (!path.data || path.size == 0)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	scratch = day_begin_scratch();
+	native_path = day_win32_path_text(scratch.arena, path);
+	if (!native_path)
+	{
+		result.error = DAY_ERROR_OUT_OF_MEMORY;
+		day_end_scratch(scratch);
+		return result;
+	}
+	if (!SetCurrentDirectoryA(native_path))
+	{
+		result.os_error = GetLastError();
+		result.error = day_win32_error(result.os_error);
+	}
+	day_end_scratch(scratch);
+	return result;
+}
+
 day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute_path)
 {
 	day_Result result = {0};
@@ -218,6 +245,64 @@ day_b32 day_executable_resolves(day_String name)
 	length = SearchPathA(NULL, native_name, ".exe", (DWORD)capacity, resolved, NULL);
 	day_end_scratch(scratch);
 	return length > 0 && length < capacity;
+}
+
+day_Result day_remove_file(day_String path)
+{
+	day_Result result = {0};
+	day_Scratch scratch;
+	char *native_path;
+	if (!path.data || path.size == 0)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	scratch = day_begin_scratch();
+	native_path = day_win32_path_text(scratch.arena, path);
+	if (!native_path)
+	{
+		result.error = DAY_ERROR_OUT_OF_MEMORY;
+		day_end_scratch(scratch);
+		return result;
+	}
+	if (!DeleteFileA(native_path))
+	{
+		result.os_error = GetLastError();
+		if (result.os_error == ERROR_FILE_NOT_FOUND || result.os_error == ERROR_PATH_NOT_FOUND) result.os_error = 0;
+		result.error = day_win32_error(result.os_error);
+	}
+	day_end_scratch(scratch);
+	return result;
+}
+
+day_Result day_move_file(day_String source, day_String destination, day_b32 overwrite)
+{
+	day_Result result = {0};
+	day_Scratch scratch;
+	char *native_source;
+	char *native_destination;
+	DWORD flags = overwrite ? MOVEFILE_REPLACE_EXISTING : 0;
+	if (!source.data || source.size == 0 || !destination.data || destination.size == 0)
+	{
+		result.error = DAY_ERROR_INVALID_ARGUMENT;
+		return result;
+	}
+	scratch = day_begin_scratch();
+	native_source = day_win32_path_text(scratch.arena, source);
+	native_destination = day_win32_path_text(scratch.arena, destination);
+	if (!native_source || !native_destination)
+	{
+		result.error = DAY_ERROR_OUT_OF_MEMORY;
+		day_end_scratch(scratch);
+		return result;
+	}
+	if (!MoveFileExA(native_source, native_destination, flags))
+	{
+		result.os_error = GetLastError();
+		result.error = day_win32_error(result.os_error);
+	}
+	day_end_scratch(scratch);
+	return result;
 }
 
 day_Result day_create_directory(day_String path)

@@ -109,6 +109,23 @@ int main(void)
 	assert(day_close_directory(&day_directory).error == DAY_ERROR_NONE);
 	day_path_pop(&day_path, day_mark);
 	assert(strcmp(day_path.data, "build/platform_test") == 0);
+	day_Arena day_arena = day_arena_create(DAY_KILOBYTES(64));
+	day_String day_current_directory;
+	assert(day_arena.data);
+	assert(day_get_current_directory(&day_arena, &day_current_directory).error == DAY_ERROR_NONE);
+	assert(day_set_current_directory(day_current_directory).error == DAY_ERROR_NONE);
+	assert(day_remove_tree(DAY_LIT("build/dayan_path_test")).error == DAY_ERROR_NONE);
+	assert(day_create_directories(DAY_LIT("build/dayan_path_test/a/b")).error == DAY_ERROR_NONE);
+	day_File day_file;
+	assert(day_access_file(DAY_LIT("build/dayan_path_test/a/source.tmp"), DAY_FILE_CREATE_ALWAYS,
+		DAY_FILE_WRITE, &day_file).error == DAY_ERROR_NONE);
+	assert(day_close_file(day_file).error == DAY_ERROR_NONE);
+	assert(day_move_file(DAY_LIT("build/dayan_path_test/a/source.tmp"),
+		DAY_LIT("build/dayan_path_test/a/moved.tmp"), 0).error == DAY_ERROR_NONE);
+	assert(day_remove_file(DAY_LIT("build/dayan_path_test/a/moved.tmp")).error == DAY_ERROR_NONE);
+	assert(day_remove_file(DAY_LIT("build/dayan_path_test/a/moved.tmp")).error == DAY_ERROR_NONE);
+	assert(day_remove_tree(DAY_LIT("build/dayan_path_test")).error == DAY_ERROR_NONE);
+	day_arena_destroy(&day_arena);
 	assert(!platform_remove_directory("build/platform_test"));
 	assert(platform_remove_tree("build/platform_test"));
 	assert(!platform_get_file_info("build/platform_test", &info));

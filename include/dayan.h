@@ -21,6 +21,7 @@ typedef uintptr_t day_uptr;
 #define DAY_KILOBYTES(value) ((day_u64)(value) << 10)
 #define DAY_MEGABYTES(value) ((day_u64)(value) << 20)
 #define DAY_GIGABYTES(value) ((day_u64)(value) << 30)
+#define DAY_PATH_CAPACITY 32768
 
 typedef struct day_Arena
 {
@@ -255,10 +256,15 @@ void day_path_pop(day_Path_Builder *path, day_Path_Mark mark);
 
 day_Result day_get_executable_path(day_Arena *arena, day_String *path);
 day_Result day_get_current_directory(day_Arena *arena, day_String *path);
+day_Result day_set_current_directory(day_String path);
 day_Result day_get_absolute_path(day_Arena *arena, day_String path, day_String *absolute);
 day_b32 day_executable_resolves(day_String name);
+day_Result day_remove_file(day_String path);
+day_Result day_move_file(day_String source, day_String destination, day_b32 overwrite);
 day_Result day_create_directory(day_String path);
+day_Result day_create_directories(day_String path);
 day_Result day_remove_directory(day_String path);
+day_Result day_remove_tree(day_String path);
 day_Result day_find_first_file(day_Path_Builder *path, day_Directory *directory, day_Directory_Entry *entry, day_Directory_Status *status);
 day_Result day_find_next_file(day_Directory *directory, day_Directory_Entry *entry, day_Directory_Status *status);
 day_Result day_close_directory(day_Directory *directory);
