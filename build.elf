@@ -99,13 +99,27 @@ compile_dayan_process := {
 	dependencies = { prepare },
 }
 
+compile_dayan_thread := {
+	name = "compile dayan thread",
+	command_line = f"${compiler}${compile_options} /c src/dayan_thread.c /Fobuild/obj/dayan_thread.obj /Fdbuild/obj/dayan_thread.pdb",
+	inputs = {
+		"src/dayan_thread.c",
+		"src/win32/dayan_thread.c",
+		"src/win32/dayan_win32.h",
+		"include/dayan.h",
+	},
+	outputs = { "build/obj/dayan_thread.obj" },
+	include_dirs = { "include" },
+	dependencies = { prepare },
+}
+
 dayan_library := {
 	name = "archive dayan.lib",
-	command_line = f"${librarian} /nologo /out:build/dayan.lib build/obj/dayan.obj build/obj/dayan_memory.obj build/obj/dayan_file.obj build/obj/dayan_path.obj build/obj/dayan_env.obj build/obj/dayan_process.obj build/obj/platform.obj",
-	inputs = { "build/obj/dayan.obj", "build/obj/dayan_memory.obj", "build/obj/dayan_file.obj", "build/obj/dayan_path.obj", "build/obj/dayan_env.obj", "build/obj/dayan_process.obj", "build/obj/platform.obj" },
+	command_line = f"${librarian} /nologo /out:build/dayan.lib build/obj/dayan.obj build/obj/dayan_memory.obj build/obj/dayan_file.obj build/obj/dayan_path.obj build/obj/dayan_env.obj build/obj/dayan_process.obj build/obj/dayan_thread.obj build/obj/platform.obj",
+	inputs = { "build/obj/dayan.obj", "build/obj/dayan_memory.obj", "build/obj/dayan_file.obj", "build/obj/dayan_path.obj", "build/obj/dayan_env.obj", "build/obj/dayan_process.obj", "build/obj/dayan_thread.obj", "build/obj/platform.obj" },
 	outputs = { "build/dayan.lib" },
 	include_dirs = {},
-	dependencies = { compile_dayan, compile_dayan_memory, compile_dayan_file, compile_dayan_path, compile_dayan_env, compile_dayan_process, compile_platform },
+	dependencies = { compile_dayan, compile_dayan_memory, compile_dayan_file, compile_dayan_path, compile_dayan_env, compile_dayan_process, compile_dayan_thread, compile_platform },
 }
 
 compile_tests := {

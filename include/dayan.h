@@ -98,6 +98,26 @@ day_Process_Stream;
 
 #define DAY_WAIT_INFINITE ((day_u32)-1)
 
+typedef day_u32 day_Thread_Function(void *context);
+
+typedef struct day_Thread
+{
+	day_uptr handle;
+}
+day_Thread;
+
+typedef struct day_Mutex
+{
+	day_u64 storage[8];
+}
+day_Mutex;
+
+typedef struct day_Condition
+{
+	day_u64 storage[8];
+}
+day_Condition;
+
 typedef enum day_Error
 {
 	DAY_ERROR_NONE,
@@ -281,5 +301,22 @@ day_Result day_wait_process(day_Process process, day_u32 milliseconds, day_b32 *
 day_Result day_close_process(day_Process *process);
 day_u64 day_current_process_id(void);
 void day_exit_process(day_i32 exit_code);
+
+day_Result day_start_thread(day_Thread_Function *function, void *context, day_Thread *thread);
+day_b32 day_thread_is_valid(day_Thread thread);
+day_Result day_join_thread(day_Thread thread, day_u32 *return_code);
+day_Result day_close_thread(day_Thread *thread);
+day_u64 day_current_thread_id(void);
+
+day_Result day_init_mutex(day_Mutex *mutex);
+void day_lock_mutex(day_Mutex *mutex);
+void day_unlock_mutex(day_Mutex *mutex);
+void day_destroy_mutex(day_Mutex *mutex);
+
+day_Result day_init_condition(day_Condition *condition);
+day_Result day_wait_condition(day_Condition *condition, day_Mutex *mutex);
+void day_signal_condition(day_Condition *condition);
+void day_broadcast_condition(day_Condition *condition);
+void day_destroy_condition(day_Condition *condition);
 
 #endif

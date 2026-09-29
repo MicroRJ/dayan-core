@@ -5,18 +5,18 @@
 #include <string.h>
 
 typedef struct Thread_Test_Context {
-	Platform_Mutex mutex;
-	Platform_Condition condition;
-	U32 value;
+	day_Mutex mutex;
+	day_Condition condition;
+	day_u32 value;
 } Thread_Test_Context;
 
-static U32 thread_test_main(void *context_pointer)
+static day_u32 thread_test_main(void *context_pointer)
 {
 	Thread_Test_Context *context = context_pointer;
-	platform_lock_mutex(&context->mutex);
+	day_lock_mutex(&context->mutex);
 	context->value = 42;
-	platform_signal_condition(&context->condition);
-	platform_unlock_mutex(&context->mutex);
+	day_signal_condition(&context->condition);
+	day_unlock_mutex(&context->mutex);
 	return 7;
 }
 
@@ -182,24 +182,23 @@ int main(void)
 	assert(!platform_process_is_valid(process));
 
 	Thread_Test_Context thread_context = {0};
-	platform_init_mutex(&thread_context.mutex);
-	platform_init_condition(&thread_context.condition);
-	platform_lock_mutex(&thread_context.mutex);
-	Platform_Thread_Start_Result thread_start = platform_start_thread(thread_test_main, &thread_context);
-	assert(thread_start.error == PLATFORM_ERROR_NONE);
+	day_Thread thread;
+	day_u32 thread_return_code;
+	assert(day_init_mutex(&thread_context.mutex).error == DAY_ERROR_NONE);
+	assert(day_init_condition(&thread_context.condition).error == DAY_ERROR_NONE);
+	day_lock_mutex(&thread_context.mutex);
+	assert(day_start_thread(thread_test_main, &thread_context, &thread).error == DAY_ERROR_NONE);
 	while (thread_context.value == 0) {
-		Platform_Result condition_wait = platform_wait_condition(&thread_context.condition, &thread_context.mutex);
-		assert(condition_wait.error == PLATFORM_ERROR_NONE);
+		assert(day_wait_condition(&thread_context.condition, &thread_context.mutex).error == DAY_ERROR_NONE);
 	}
-	platform_unlock_mutex(&thread_context.mutex);
+	day_unlock_mutex(&thread_context.mutex);
 	assert(thread_context.value == 42);
-	assert(platform_current_thread_id() != 0);
-	Platform_Thread_Join_Result thread_join = platform_join_thread(thread_start.thread);
-	assert(thread_join.error == PLATFORM_ERROR_NONE);
-	assert(thread_join.return_code == 7);
-	platform_close_thread(&thread_start.thread);
-	assert(!platform_thread_is_valid(thread_start.thread));
-	platform_destroy_condition(&thread_context.condition);
-	platform_destroy_mutex(&thread_context.mutex);
+	assert(day_current_thread_id() != 0);
+	assert(day_join_thread(thread, &thread_return_code).error == DAY_ERROR_NONE);
+	assert(thread_return_code == 7);
+	assert(day_close_thread(&thread).error == DAY_ERROR_NONE);
+	assert(!day_thread_is_valid(thread));
+	day_destroy_condition(&thread_context.condition);
+	day_destroy_mutex(&thread_context.mutex);
 	return 0;
 }
